@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  api:
+    container_name: api
+    build: 
+      context: api
+    image: fhbaptista/fc-api
+    entrypoint: dockerize -wait tcp://db:3306 -timeout 120s docker-entrypoint.sh
+    command: node index.js
+    tty: true
+    networks: 
+      - rpx-network
+    depends_on: 
+      - db
+
+  reverse-proxy:
+    container_name: reverse-proxy
+    build: 
+      context: ./reverse-proxy
+    image: fhbaptista/fc-reverse-proxy
+    entrypoint: dockerize -wait http://api:3000 -timeout 120s /docker-entrypoint.sh
+    command: nginx -g "daemon off;"
+    networks: 
+      - rpx-network
+    ports: 
+      - "8080:80"
+    depends_on: 
+      - api
+
+  db:
+    container_name: db
+    image: mysql
+    restart: always
+    tty: true
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=defaultdb
+    volumes:
+      - ./db:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/SCHEMA.sql
+    networks:
+      - rpx-network
+    expose:
+      - "3306"
+
+networks:
+  rpx-network:
+    name: "rpx-net"
+    driver: bridge
