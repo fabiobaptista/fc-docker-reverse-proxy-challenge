@@ -38,7 +38,7 @@ services:
       - MYSQL_DATABASE=defaultdb
     volumes:
       - ./db:/var/lib/mysql
-      - ./init-db.sql:/docker-entrypoint-initdb.d/SCHEMA.sql
+      - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - rpx-network
     expose:
